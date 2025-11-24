@@ -63,7 +63,7 @@ class App:
 
         #Agent related
         self.agent = CodeAgent(
-            tools=[DuckDuckGoSearchTool],
+            tools=[DuckDuckGoSearchTool()],
             model = InferenceClientModel(),
             additional_authorized_imports=['datetime']
         )
