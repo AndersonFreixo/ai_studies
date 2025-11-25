@@ -11,6 +11,8 @@ def get_weather(city: str) -> str:
         city: A string containing the name of the city."""
     #API key should be placed in a .env file in the root
     #directory of the project.
+    if not isinstance(city, str):
+        return "Error: argument must be a string."
     dotenv.load_dotenv()
     #Currently using API from https://www.weatherapi.com/
     #which provides a free plan.
