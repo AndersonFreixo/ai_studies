@@ -1,1 +1,4 @@
 .env
+llamaindex/example_docs/*
+llamaindex/chromadb/*
+*.pyc
