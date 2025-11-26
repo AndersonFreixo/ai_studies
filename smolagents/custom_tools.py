@@ -20,7 +20,7 @@ def get_weather(city: str) -> str:
     #If no city is given, then get weather in current location
     #based on IP address
     location = city if city else "auto:ip"
-    url = f"http://api.weatherapi.com/v1/current.json?key={api_key}&q={location}"
+    url = f"https://api.weatherapi.com/v1/current.json?key={api_key}&q={location}"
     res = requests.get(url)
     if res.status_code == 200:
         res = res.json()
