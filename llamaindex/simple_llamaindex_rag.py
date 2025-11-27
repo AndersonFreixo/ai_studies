@@ -1,6 +1,7 @@
-#My first attempt at RAG implementation
-#following HuggingFace's Agents Course Unity 2.2
-#on llamaindex.
+#My first attempt at RAG implementation using LlamaIndex
+#It consists of a script that loads everything necessary
+#to run the index as a query engine and then just loops
+#getting queries from the user.
 
 import asyncio, chromadb, dotenv
 from llama_index.core import Document, VectorStoreIndex, SimpleDirectoryReader
@@ -8,14 +9,8 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.ingestion import IngestionPipeline
 from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.llms.huggingface_api import HuggingFaceInferenceAPI
-from llama_index.llms.ollama import Ollama
-
-#Load documents from directory
-print("Loading documents...")
-reader = SimpleDirectoryReader(input_dir="./example_docs")
-documents = reader.load_data()
-print("Ok!")
+from llama_index.llms.huggingface_api import HuggingFaceInferenceAPI #only if using model through HF API
+from llama_index.llms.ollama import Ollama #only if using local model
 
 #Instantiate db to store vector embeddings
 print("Instantiating ChromaDB...")
@@ -32,10 +27,17 @@ pipeline = IngestionPipeline(transformations=[
     SentenceSplitter(chunk_overlap=0),
     HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5"),
     ],
-vector_store=vector_store,
+    vector_store=vector_store,
 )
 print("OK!")
 
+#Load documents from directory
+#You don't need to run this everytime
+#unless you add more docs
+print("Loading documents...")
+reader = SimpleDirectoryReader(input_dir="./example_docs")
+documents = reader.load_data()
+print("Ok!")
 print("Feeding documents to pipeline...")
 pipeline.run(documents=documents,)
 print("OK!")
@@ -55,15 +57,20 @@ print("Instantiating model...")
 llm = Ollama(model="qwen3:1.7b", #works fine without gpu if...
     max_output_tokens=100,
     temperature=0.3,
-    #context_window=12000,
-    request_timeout=3600.0)     #...you set a high timeout
-
+    request_timeout=3600.0)     #...you set a high timeout and is willing to wait.
 print("OK!")
-print("Querying engine...")
+
+print("Instantiating query engine...")
 query_engine = index.as_query_engine(
     llm=llm,
     response_mode="simple_summarize",
     similarity_top_k=1
-)
+    )
+print("OK!")
 
-print(query_engine.query("Explique quem é Anderson Soares Freixo em português"))
+while (query := input("Ask me something: ")) != "EXIT":
+    print(query_engine.query(query))
+    print()
+
+
+
