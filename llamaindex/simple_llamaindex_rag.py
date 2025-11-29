@@ -23,8 +23,7 @@ def get_chroma_store(path, collection_name):
     chroma_collection = db.get_or_create_collection(collection_name)
     return ChromaVectorStore(chroma_collection=chroma_collection)
 
-
-def ingest_docs(docs_path, vector_store):
+def ingest_docs(docs_path, vector_store, embed_model):
     """Retrieve documents in 'docs_path' and feed them to an IngestionPipeline.
     The embeddings are stores in 'vector_store'"""
 
@@ -34,7 +33,7 @@ def ingest_docs(docs_path, vector_store):
     print("Setting up ingestion pipeline...")
     pipeline = IngestionPipeline(transformations=[
         SentenceSplitter(chunk_overlap=0),
-        HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5"),
+        embed_model,
         ],
         vector_store=vector_store,
     )
@@ -48,18 +47,23 @@ def ingest_docs(docs_path, vector_store):
     pipeline.run(documents=documents,)
     print("OK!")
 
+def get_index(vector_store, embed_model):
+    """Returns a VectorStoreIndex from a given 'vector_store'
+    and 'embed_model."""
+    return VectorStoreIndex.from_vector_store(vector_store, embed_model=embed_model)
 
 if __name__ == "__main__":
     print("Getting vector store from ChromaDB...")
     vector_store = get_chroma_store(CHROMA_PATH, CHROMA_COLLECTION_NAME)
     print("Ok!")
+
+    embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
     #You don't need to run the ingestion pipeline
     #after first run unless you add more docs
-    ingest_docs(DOCS_PATH, vector_store)
+    ingest_docs(DOCS_PATH, vector_store, embed_model)
     #Create index to embed queries in same space than nodes
     print("Creating index...")
-    embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
-    index = VectorStoreIndex.from_vector_store(vector_store, embed_model=embed_model)
+    index = get_index(vector_store, embed_model)
     print("OK!")
     print("Instantiating model...")
 
